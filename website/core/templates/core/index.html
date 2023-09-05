@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Blogs</h2>
+
+    <!-- Sort Buttons -->
+    <div class="font-weight-bold small text-primary"><i class="fas fa-sort"></i> Sort By</div>
+    <div class="mb-4 btn-group btn-group-sm" role="group" aria-label="Sort Blogs">
+        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="date">Date</button>
+        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="views">Views</button>
+        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="likes">Likes</button>
+    </div>
+
+    <!-- Blog List -->
+    <div class="list-group">
+        {% for blog in blogs %}
+            <div class="list-group-item list-group-item-action">
+                <h4 class="mb-2"><a href="{% url 'blog_detail' blog.pk %}">{{ blog.title }}</a></h4>
+                <p class="text-muted small fst-italic mb-0">
+                    {% if user == blog.author %}
+                        You
+                    {% else %}
+                        {{ blog.author.get_full_name|default:blog.author.username }}
+                    {% endif %}
+                </p>
+                <p class="text-muted small fst-italic mb-0">{{ blog.created_at|date:"F d, Y" }}</p>
+                <p class="small">
+                    <i class="fas fa-thumbs-up fa-xs"></i> {{ blog.likemodel_set.count }}
+                    &nbsp;
+                    <i class="fas fa-eye fa-xs"></i> {{ blog.views }}
+                </p>
+                <p class="mb-1">{{ blog.content|truncatechars:100 }}</p>
+            </div>
+        {% empty %}
+            <div class="list-group-item">No blogs found.</div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Blog Pagination" class="my-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for i in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+    
+
+{% block extra_script %}
+<script>
+    // Get all sorting buttons by class name
+    const sortBtns = document.getElementsByClassName('sort-btn');
+    const urlParams = new URLSearchParams(window.location.search);
+    const sortedBy = urlParams.get('sorted_by');
+
+    for (const btn of sortBtns) {
+        // Add active class to selected sorting button
+        if (sortedBy) {
+            if (btn.getAttribute('data-sort') === sortedBy) btn.classList.add('active');
+        }
+        else {
+            if (btn.getAttribute('data-sort') === 'date') btn.classList.add('active');
+        }
+
+        // Add click event listener to each sorting button
+        btn.addEventListener('click', function () {
+            // Get the sorting parameter from the data-sort attribute
+            const sortingParam = this.getAttribute('data-sort');
+
+            // Get the current URL without query parameters
+            const currentURL = window.location.origin + window.location.pathname;
+
+            // Build the new URL with the sorting parameter
+            const newURL = `${currentURL}?sorted_by=${sortingParam}`;
+
+            // Redirect to the new URL
+            window.location.href = newURL;
+        });
+    }
+</script>
+{% endblock extra_script %}
+    

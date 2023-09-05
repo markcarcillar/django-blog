@@ -1,0 +1,185 @@
+{% extends 'core/base.html' %}
+{% csrf_token %}
+{% load crispy_forms_tags %}
+    
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        {% if blog.media %}
+            <div class="col col-sm-10 col-md-8 col-lg-7">
+                <img id="media" src="{{ blog.media.url }}" class="img-fluid rounded mb-3" alt="{{ blog.title }} Media">
+            </div>
+        {% endif %}
+        <div class="col-lg-8">
+            <p class="small">
+                <i class="fas fa-thumbs-up fa-xs"></i> <span id="likes-count">{{ blog.likemodel_set.count }}</span>
+                &nbsp;
+                <i class="fas fa-eye fa-xs"></i> {{ blog.views }}
+            </p>
+
+            {% if user.is_authenticated %}
+                <div class="mb-3">
+                    <button class="btn btn-primary mb-3 mr-1" id="like-button" data-blog-id="{{ blog.id }}">
+                        <i class="fas fa-thumbs-up fa-xs"></i>
+                    </button>
+        
+                    {% if user == blog.author %}
+                        <a href="{% url 'blog_update' blog.pk %}" class="btn btn-secondary mb-3 mr-1">
+                            <i class="fas fa-edit fa-xs"></i>
+                        </a>
+                        <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-danger mb-3 mr-1">
+                            <i class="fas fa-trash fa-xs"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+                
+            <div>
+                <h2 class="mb-2">{{ blog.title }}</h2>
+                <div class="px-2 mb-3">
+                    <p class="text-muted small fst-italic mb-0">
+                        {% if user == blog.author %}
+                            You
+                        {% else %}
+                            {{ blog.author.get_full_name|default:blog.author.username }}
+                        {% endif %}
+                    </p>
+                    <p class="text-muted small fst-italic">{{ blog.created_at }}</p>
+                </div>
+                <p class="mb-3">{{ blog.content|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="comment-section mb-4">
+        <h3 class="mb-2">Comments</h3>
+        {% for comment in blog.commentmodel_set.all %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {% if user == comment.user %}
+                            You
+                        {% else %}
+                            {{ comment.user.get_full_name|default:comment.user.username }}
+                        {% endif %}
+                    </h5>
+                    <p class="card-text">{{ comment.text }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </p>
+                </div>
+            </div>
+        {% empty %}
+            <p id="no-comment">No comments yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col col-md-10 col-lg-8 col-xl-6">
+            <form id="comment-form" class="card card-body" method="POST">
+                {% csrf_token %}
+                <label class="mb-2 h4" for="comment-text"><i class="far fa-comment"></i> Comment</label>
+                <input id="comment-text" type="text" class="form-control mb-2" name="form" placeholder="Comment here...">
+                <button type="submit" class="btn btn-primary mb-4">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_script %}
+<script>
+    // Prepare JS CSRF Token
+    const csrfToken = "{{ csrf_token }}";
+
+    // Like/Unlike Script
+    document.addEventListener('DOMContentLoaded', function () {
+        const likeButton = document.getElementById('like-button');
+        const blogId = likeButton.getAttribute('data-blog-id');
+
+        likeButton.addEventListener('click', function () {
+            fetch('/api/like-toggle/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ blog_id: blogId }),
+            })
+            .then(response => {
+                if (response.status === 200 || response.status === 201) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to like/unlike blog');
+                }
+            })
+            .then(data => {
+                if (data.message === 'Liked') {
+                    likeButton.innerHTML = `<i class="fas fa-thumbs-up fa-xs"></i>`;
+                } else {
+                    likeButton.innerHTML = `<i class="fas fa-thumbs-up fa-xs"></i>`;
+                }
+                // Update like count display
+                document.getElementById('likes-count').innerText = data.likes_count;
+            })
+            .catch();
+        });
+    });
+
+
+    // Comment Script
+    const commentForm = document.getElementById('comment-form');
+    const commentText = document.getElementById('comment-text');
+    const noComment = document.getElementById('no-comment');
+
+    commentForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const text = commentText.value;
+        const blogId = "{{ blog.id }}"; // Replace with the actual blog ID
+
+        fetch(`/api/blog/${blogId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ text }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'Comment created successfully') {
+                // Clear the comment input and remove error message
+                commentText.value = '';
+                if (noComment) noComment.style.display = 'none';
+                
+                // Create and append the new comment to the comments section
+                const commentSection = document.querySelector('.comment-section');
+                const newComment = document.createElement('div');
+                newComment.classList.add('card', 'mb-3');
+                newComment.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            You
+                        </h5>
+                        <p class="card-text">${text}</p>
+                        <p class="card-text">
+                            <small class="text-muted">Just now</small>
+                        </p>
+                    </div>
+                `;
+                commentSection.appendChild(newComment);
+            } else {
+                // Handle errors (e.g., display an error message)
+                alert('Failed to create a comment. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock extra_script %}
+    
