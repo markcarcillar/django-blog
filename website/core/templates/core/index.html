@@ -1,81 +1,124 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Blogs</h2>
 
-    <!-- Sort Buttons -->
-    <div class="font-weight-bold small text-primary"><i class="fas fa-sort"></i> Sort By</div>
-    <div class="mb-4 btn-group btn-group-sm" role="group" aria-label="Sort Blogs">
-        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="date">Date</button>
-        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="views">Views</button>
-        <button type="button" class="btn btn-outline-primary sort-btn" data-sort="likes">Likes</button>
+<div class="container mt-4">
+
+
+    <div class="container">
+        <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+            <p class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                <svg class="bi me-2" width="40" height="32">
+                    <use xlink:href="#bootstrap"></use>
+                </svg>
+                <span class="fs-4">The Posts</span>
+            </p>
+
+            <ul class="nav nav-pills">
+                <li class="nav-item"><button type="button" class="btn btn-sm sort-btn" data-sort="date">Date</button>
+                </li>
+                <li class="nav-item"><button type="button" class="btn btn-sm sort-btn" data-sort="views">Views</button>
+                </li>
+                <li class="nav-item"><button type="button" class="btn btn-sm sort-btn" data-sort="likes">Likes</button>
+                </li>
+            </ul>
+        </header>
     </div>
 
-    <!-- Blog List -->
-    <div class="list-group">
+
+    <div class="row mb-2">
         {% for blog in blogs %}
-            <div class="list-group-item list-group-item-action">
-                <h4 class="mb-2"><a href="{% url 'blog_detail' blog.pk %}">{{ blog.title }}</a></h4>
-                <p class="text-muted small fst-italic mb-0">
-                    {% if user == blog.author %}
-                        You
-                    {% else %}
-                        {{ blog.author.get_full_name|default:blog.author.username }}
-                    {% endif %}
-                </p>
-                <p class="text-muted small fst-italic mb-0">{{ blog.created_at|date:"F d, Y" }}</p>
-                <p class="small">
-                    <i class="fas fa-thumbs-up fa-xs"></i> {{ blog.likemodel_set.count }}
-                    &nbsp;
-                    <i class="fas fa-eye fa-xs"></i> {{ blog.views }}
-                </p>
-                <p class="mb-1">{{ blog.content|truncatechars:100 }}</p>
+
+        <div class="col-md-6">
+            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                <div class="col p-4 d-flex flex-column position-static">
+
+                    <strong
+                        class="d-inline-block mb-2 text-primary-emphasis">World<!--{{ blog.likemodel_set.count }} {{ blog.views }}--></strong>
+
+                    <h3 class="mb-0">{{ blog.title }}</h3>
+
+                    <div class="mb-1 text-body-secondary">{{ blog.created_at|timesince }} ago</div>
+
+                    <!--<p class="card-text mb-auto">{{ blog.content|truncatechars:50|safe }}</p>-->
+
+                    <a href="{% url 'blog_detail' blog.pk %}" class="icon-link gap-1 icon-link-hover stretched-link">
+                        Continue reading
+                        <svg class="bi">
+                            <use xlink:href="#chevron-right"></use>
+                        </svg>
+                    </a>
+
+                </div>
             </div>
+        </div>
+
         {% empty %}
-            <div class="list-group-item">No blogs found.</div>
+
+        <div class="list-group-item">No blogs found.</div>
+
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
+
     <nav aria-label="Blog Pagination" class="my-4">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination pagination-sm justify-content-center">
+
+
             {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
+
+
+            <li class="page-item">
+                <a class="page-link" href="?page=1" aria-label="First">
+                    <span aria-hidden="true">First</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">Previous</span>
+                </a>
+            </li>
+
+
             {% endif %}
+
 
             {% for i in page_obj.paginator.page_range %}
-                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                </li>
+
+
+            <li class="{% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+
+
             {% endfor %}
 
+
             {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
+
+
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">Next</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    <span aria-hidden="true">Last</span>
+                </a>
+            </li>
+
+
             {% endif %}
+
+
         </ul>
     </nav>
 </div>
+
+
 {% endblock %}
-    
+
 
 {% block extra_script %}
 <script>
@@ -110,4 +153,3 @@
     }
 </script>
 {% endblock extra_script %}
-    

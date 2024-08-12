@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  web:
+    build: ./website
+    container_name: web
+    environment:
+      - DEBUG=1
+    expose:
+      - "8000"
+    
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - web

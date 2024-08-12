@@ -12,6 +12,7 @@
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Project Setup](#project-setup)
+    - [Project Docker Setup](#project-docker-setup)
   - [Project Structure](#project-structure)
   - [Usage](#usage)
     - [User Registration and Authentication](#user-registration-and-authentication)
@@ -85,6 +86,46 @@ pip install Django
    ```
 
 7. Open your web browser and visit [http://localhost:8000/](http://localhost:8000/) to access the Django Blog project.
+
+### Project Docker Setup
+
+Here’s a step-by-step guide to build and run your Django project with Docker:
+
+Prerequisites
+Ensure you have Docker and Docker Compose installed on your machine.
+
+#### 1: Build the Docker Images
+Navigate to your project’s root directory (where your docker-compose.yml file is located) and run the following command to build the Docker images:
+
+```bash
+docker-compose build
+```
+This command will build the images for the web and nginx services based on the configurations specified in your Dockerfile and `docker-compose.yml`.
+
+#### 2: Start the Application
+Now, you can start your entire application using:
+
+```bash
+docker-compose up -d
+```
+The `-d` flag runs the containers in detached mode (in the background).
+
+#### 3: Monitor Logs (Optional)
+To view the logs from your running containers, use:
+
+```bash
+docker-compose logs -f
+```
+This command will show the logs and allow you to monitor the output in real-time.
+
+
+#### 4: Stop the Containers
+When you want to stop the application, use the following command:
+
+```bash
+docker-compose down
+```
+This will stop and remove the containers, but it will keep the volumes intact.
 
 ## Project Structure
 
